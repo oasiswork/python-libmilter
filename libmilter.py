@@ -1,17 +1,17 @@
 #!/usr/bin/python
 
 # This file is part of python-libmilter.
-# 
+#
 # python-libmilter is free software: you can redistribute it and/or modify
 # it under the terms of the GNU General Public License as published by
 # the Free Software Foundation, either version 3 of the License, or
 # (at your option) any later version.
-# 
+#
 # python-libmilter is distributed in the hope that it will be useful,
 # but WITHOUT ANY WARRANTY; without even the implied warranty of
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 # GNU General Public License for more details.
-# 
+#
 # You should have received a copy of the GNU General Public License
 # along with python-libmilter.  If not, see <http://www.gnu.org/licenses/>.
 
@@ -145,10 +145,10 @@ SMFIC_QUIT_NC = b'K'         # Quit + new connection
 SMFIC_BODY_MACS = (SMFIC_DATA , SMFIC_HEADER , SMFIC_EOH , SMFIC_BODY)
 # }}}
 
-# Responses/commands that we send to the MTA (SMFIR_*) {{{ 
-SMFIR_ADDRCPT = b'+'         # Add recipient 
-SMFIR_DELRCPT = b'-'         # Remove recipient 
-SMFIR_ACCEPT = b'a'          # Accept 
+# Responses/commands that we send to the MTA (SMFIR_*) {{{
+SMFIR_ADDRCPT = b'+'         # Add recipient
+SMFIR_DELRCPT = b'-'         # Remove recipient
+SMFIR_ACCEPT = b'a'          # Accept
 SMFIR_REPLBODY = b'b'        # Replace body (chunk)
 SMFIR_CONTINUE = b'c'        # Continue
 SMFIR_DISCARD = b'd'         # Discard
@@ -538,7 +538,7 @@ class MilterProtocol(object):
             p = getattr(f , 'protos' , 0)
             self.protos |= p
         self.closed = False
-        self._qid = None         # The Queue ID assigned by the MTA       
+        self._qid = None         # The Queue ID assigned by the MTA
         self._mtaVersion = 0
         self._mtaOpts = 0
         self._mtaProtos = 0
@@ -610,13 +610,13 @@ class MilterProtocol(object):
             try:
                 curcmds , remaining = parse_packet(buf)
             except InvalidPacket as e:
-                debug('Found a partial header: %r; cmdlen: %d ; buf: %r' % 
+                debug('Found a partial header: %r; cmdlen: %d ; buf: %r' %
                     (e.pp , len(e.cmds) , buf) , 2 , self.id)
                 cmds.extend(e.cmds)
                 self._partialHeader = e.pp
             else:
                 cmds.extend(curcmds)
-        debug('parsed packet, %d cmds , %d remaining: cmds: %r ; qid: %s' % 
+        debug('parsed packet, %d cmds , %d remaining: cmds: %r ; qid: %s' %
             (len(cmds) , remaining , cmds , self._qid) , 2 , self.id)
         if remaining:
             self._partial = (remaining , cmds[-1:])
@@ -678,14 +678,14 @@ class MilterProtocol(object):
                         # There is a nocallback set for this, just continue
                         continue
                     elif self.protos & nr:
-                        # No reply for this, just run it and discard 
+                        # No reply for this, just run it and discard
                         # the response
                         debug('No response set for %r' % self._MACMAP[mtype] ,
                             4 , self.id)
                         self._MACMAP[mtype](macro , d)
                         continue
                 # Run it and send back to the MTA
-                debug('Calling %r for qid: %s' % (self._MACMAP[mtype] , 
+                debug('Calling %r for qid: %s' % (self._MACMAP[mtype] ,
                     self._qid) , 4 , self.id)
                 toSend = self._MACMAP[mtype](macro , d)
                 if not toSend:
@@ -694,7 +694,7 @@ class MilterProtocol(object):
                     toSend = CONTINUE
             if toSend and not isinstance(toSend , Deferred):
                 self.send(toSend)
-    
+
     def _getOptnegPkt(self):
         """
         This is a simple convenience function to create an optneg
@@ -750,7 +750,7 @@ class MilterProtocol(object):
     def _connect(self , cmd , data):
         """
         Parses the connect info from the MTA, calling the connect()
-        method with (<reverse hostname> , <ip family> , <ip addr> , 
+        method with (<reverse hostname> , <ip family> , <ip addr> ,
             <port> , <cmdDict>)
         """
         md = {}
@@ -772,7 +772,7 @@ class MilterProtocol(object):
 
     def _helo(self , cmd , data):
         """
-        Parses the helo info from the MTA and calls helo() with 
+        Parses the helo info from the MTA and calls helo() with
         (<helo name>)
         """
         md = {}
@@ -816,7 +816,7 @@ class MilterProtocol(object):
         rcpt = ''
         if data:
             rcpt = data[1:-1]
-        if 'rcpt_addr' in md:
+        elif 'rcpt_addr' in md:
             rcpt = md['rcpt_addr']
         if 'i' in md:
             self._qid = md['i']
@@ -839,7 +839,7 @@ class MilterProtocol(object):
             key , rem = readUntilNull(data[1:])
             val , rem = readUntilNull(rem)
             if rem:
-                raise UnknownError('Extra data for header: %s=%s (%s)' % (key , 
+                raise UnknownError('Extra data for header: %s=%s (%s)' % (key ,
                     val , data))
         return self.header(key , val , md)
 
@@ -869,7 +869,7 @@ class MilterProtocol(object):
     def _body(self , cmd , data):
         """
         Parses the body chunk from the MTA and calls body() with
-        (<body chunk> , <cmdDict>) 
+        (<body chunk> , <cmdDict>)
         """
         data = data[0]
         md = {}
@@ -931,7 +931,7 @@ class MilterProtocol(object):
     def addRcpt(self , rcpt , esmtpAdd=''):
         """
         This will tell the MTA to add a recipient to the email
-        
+
         NOTE: This can ONLY be called in eob()
         """
         if esmtpAdd:
@@ -966,7 +966,7 @@ class MilterProtocol(object):
     def replBody(self , body):
         """
         This will replace the body of the email with a new body
-        
+
         NOTE: This can ONLY be called in eob()
         """
         if not SMFIF_CHGBODY & self._opts & self._mtaOpts:
@@ -980,7 +980,7 @@ class MilterProtocol(object):
         """
         This will add a header to the email in the form:
             key: val
-        
+
         NOTE: This can ONLY be called in eob()
         """
         if not SMFIF_ADDHDRS & self._opts & self._mtaOpts:
@@ -997,7 +997,7 @@ class MilterProtocol(object):
         the header will be removed.  "index" refers to which header to
         remove in the case that there are multiple headers with the
         same "key" (Received: is one example)
-        
+
         NOTE: This can ONLY be called in eob()
         """
         if not SMFIF_CHGHDRS & self._opts & self._mtaOpts:
@@ -1012,7 +1012,7 @@ class MilterProtocol(object):
         """
         This tells the MTA to quarantine the message (put it in the HOLD
         queue in Postfix).
-        
+
         NOTE: This can ONLY be called in eob()
         """
         if not SMFIF_QUARANTINE & self._opts & self._mtaOpts:
@@ -1037,7 +1037,7 @@ class MilterProtocol(object):
         """
         This tells the MTA to change the from address, with optional
         ESMTP extensions
-        
+
         NOTE: This can ONLY be called in eob()
         """
         if not SMFIF_CHGFROM & self._opts & self._mtaOpts:
@@ -1068,7 +1068,7 @@ class MilterProtocol(object):
     # Override these in a subclass
     ###################
     @noCallback
-    def connect(self , hostname , family , ip , port , cmdDict): 
+    def connect(self , hostname , family , ip , port , cmdDict):
         """
         This gets the connection info:
 
@@ -1167,7 +1167,7 @@ class MilterProtocol(object):
         """
         This gets a chunk of the body of the email from the MTA.
         This will be called many times for a large email
-        
+
         str:chunk       A chunk of the email's body
         dict:cmdDict    The raw dictionary of items sent by the MTA
 
@@ -1213,7 +1213,7 @@ class MilterProtocol(object):
 # class AsyncFactory {{{
 class AsyncFactory(object):
     # __init__() {{{
-    def __init__(self , sockstr , protocol , opts=0 , listenq=50 , 
+    def __init__(self , sockstr , protocol , opts=0 , listenq=50 ,
             sockChmod=0o666):
         self.sock = None
         self.opts = opts
@@ -1239,7 +1239,7 @@ class AsyncFactory(object):
             p.transport = sock
             self.register(sock , p)
     # }}}
-    
+
     # register() {{{
     def register(self , sock , proto):
         fileno = sock.fileno()
@@ -1323,7 +1323,7 @@ class AsyncFactory(object):
             # Remove finished deferreds
             for d in toRem:
                 DEFERRED_REG.discard(d)
-           
+
     # }}}
 
     # close() {{{
@@ -1342,7 +1342,7 @@ class AsyncFactory(object):
 
 # class ThreadFactory {{{
 class ThreadFactory(object):
-    def __init__(self , sockstr , protocol , opts=0 , listenq=50 , 
+    def __init__(self , sockstr , protocol , opts=0 , listenq=50 ,
             sockChmod=0o666 , cSockTimeout=1200):
         self.sock = None
         self.opts = opts
@@ -1402,7 +1402,7 @@ class ThreadFactory(object):
                 debug(emsg , 1 , -1)
                 p.transport = None
                 sock.close()
-    
+
     def close(self):
         self._close.set()
         self.sock.close()
@@ -1411,7 +1411,7 @@ class ThreadFactory(object):
 
 # class ForkFactory {{{
 class ForkFactory(object):
-    def __init__(self , sockstr , protocol , opts=0 , listenq=50 , 
+    def __init__(self , sockstr , protocol , opts=0 , listenq=50 ,
             sockChmod=0o666 , cSockTimeout=300):
         self.sock = None
         self.opts = opts
@@ -1480,7 +1480,7 @@ class ForkFactory(object):
                 debug(emsg , 1 , -1)
                 p.transport = None
                 sock.close()
-    
+
     def close(self):
         self._close.set()
         self.sock.close()
