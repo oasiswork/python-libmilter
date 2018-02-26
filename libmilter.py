@@ -377,7 +377,7 @@ def dictFromCmd(cmd):
             val = None
         d[key] = val
         cmd = rem
-    return d
+    return {k.decode('utf-8'): v.decode('utf-8') for k, v in d.items()}
 
 
 def debug(msg, level=1, protId=0):
@@ -386,7 +386,7 @@ def debug(msg, level=1, protId=0):
     if level <= DEBUG:
         out = '[%s] DEBUG: ' % time.strftime('%H:%M:%S')
         if protId:
-            out += 'ID: %d ; ' % protId
+            out += 'ID: %s ; ' % protId
         out += msg
         print(out, file=sys.stderr)
 # }}}
@@ -813,22 +813,23 @@ class MilterProtocol(object):
             if family != SMFIA_UNKNOWN:
                 port = unpack_uint16(rem[1:3])
                 ip = rem[3:-1]
-        return self.connect(hostname, family, ip, port, md)
+        return self.connect(
+            hostname.decode('utf-8'), family, ip.decode('utf-8'), port, md)
 
     def _helo(self, cmd, data):
         """
         Parses the helo info from the MTA and calls helo() with
         (<helo name>)
         """
-        # md = {}
-        # if cmd is not None:
-        #     md = dictFromCmd(cmd[2:])
+        md = {}
+        if cmd is not None:
+            md = dictFromCmd(cmd[2:])
         data = data[0]
         heloname = ''
         if data:
             checkData(data, SMFIC_HELO)
             heloname = data[1:-1]
-        return self.helo(heloname)
+        return self.helo(heloname.decode('utf-8'), md)
 
     def _mailFrom(self, cmd, data):
         """
@@ -847,7 +848,7 @@ class MilterProtocol(object):
             mfrom = md['mail_addr']
         if 'i' in md:
             self._qid = md['i']
-        return self.mailFrom(mfrom, md)
+        return self.mailFrom(mfrom.decode('utf-8'), md)
 
     def _rcpt(self, cmd, data):
         """
@@ -865,7 +866,7 @@ class MilterProtocol(object):
             rcpt = md['rcpt_addr']
         if 'i' in md:
             self._qid = md['i']
-        return self.rcpt(rcpt, md)
+        return self.rcpt(rcpt.decode('utf-8'), md)
 
     def _header(self, cmd, data):
         """
@@ -886,7 +887,7 @@ class MilterProtocol(object):
             if rem:
                 raise UnknownError(
                     'Extra data for header: %s=%s (%s)' % (key, val, data))
-        return self.header(key, val, md)
+        return self.header(key.decode('utf-8'), val.decode('utf-8'), md)
 
     def _eoh(self, cmd, data):
         """
@@ -1131,11 +1132,12 @@ class MilterProtocol(object):
         return CONTINUE
 
     @noCallback
-    def helo(self, heloname):
+    def helo(self, heloname, cmdDict):
         """
         This gets the HELO string sent by the client
 
         str:heloname    What the client HELOed as
+        dict:cmdDict    The raw dictionary of items sent by the MTA
 
         Override this in a subclass.
         """
