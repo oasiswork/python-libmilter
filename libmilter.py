@@ -467,7 +467,6 @@ class ThreadMixin(threading.Thread):
                 if DEBUG:
                     traceback.print_exc()
                     debug('AN EXCEPTION OCCURED: %s' % e , 1 , self.id)
-                self.send(TEMPFAIL)
                 self.connectionLost()
                 break
 # }}}
@@ -509,7 +508,6 @@ class ForkMixin(object):
                 if DEBUG:
                     traceback.print_exc()
                     debug('AN EXCEPTION OCCURED: %s' % e , 1 , self.id)
-                self.send(TEMPFAIL)
                 self.connectionLost()
                 break
         #self.log('Exiting child process')
@@ -1308,7 +1306,6 @@ class AsyncFactory(object):
                             traceback.print_exc()
                         print('AN EXCEPTION OCCURED IN ' \
                             '%s: %s' % (p.id , e), file=sys.stderr)
-                        p.send(TEMPFAIL)
                         p.connectionLost()
                         self.unregister(fd)
             # Check the deferreds
